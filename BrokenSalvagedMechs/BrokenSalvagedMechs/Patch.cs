@@ -148,7 +148,7 @@ namespace AdjustedMechAssembly {
                     __instance.AddMech(0, mechDef, true, false, true, null);
                     SimGameInterruptManager interrupt = (SimGameInterruptManager)ReflectionHelper.GetPrivateField(__instance, "interruptQueue");
                     interrupt.DisplayIfAvailable();
-                    __instance.MessageCenter.PublishMessage(new SimGameMechAddedMessage(mechDef, true));
+                    __instance.MessageCenter.PublishMessage(new SimGameMechAddedMessage(mechDef, defaultMechPartMax, true));
                 }
             }
             catch (Exception e) {
