@@ -33,7 +33,9 @@ RepairComponentsNonFunctionalThreshold | float | default 0.5 | Chance any repair
 AssembleVariants | bool | default true | Mechs of the same base model will now be assembled when the max partcount is reached, the actual mech that gets assembled is chance based with more parts = higher chance.
 AssembleMostParts | bool | default true | Variants will be assembled as the mech with the most parts instead of the chance based system.
 VariantExceptions | List<string> | default [] | List of mechids that will behave like vanilla and not be used for variant assembly. example ["mechdef_atlas_AS7-D","mechdef_awesome_AWS-8Q"]
-
+UseWeightThresholds | bool | default false | activate Different number of parts for different tonnage needed to assemble
+WeightThresholds | List<int> | default [ 0, 0, 40, 45, 50, 60, 65, 70, 80, 85, 95, 95 ] | If using weight thresholds this determines the number of parts needed for each weight. Each entry is one part. for example here: 0-39 = 2; 40-44 = 3; 95-100 = 12
+    
 Every componant that is neither Functional nor NonFunctional will be destroyed even so you set RepairMechComponents to true.
     
 ## Install
