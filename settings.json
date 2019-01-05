@@ -14,5 +14,8 @@
 
         "RepairMechComponents" : true,
         "RepairComponentsFunctionalThreshold" : 0.25,
-        "RepairComponentsNonFunctionalThreshold" : 0.5
+        "RepairComponentsNonFunctionalThreshold" : 0.5,
+
+		"UseWeightThresholds" : false,
+		"PartsByWeight" : [0,0,40,45,50,60,65,70,80,95,95]
 }

@@ -5,26 +5,30 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace AdjustedMechAssembly {
+namespace AdjustedMechAssembly
+{
 
     [HarmonyPatch(typeof(SimGameState), "AddMechPart")]
-    public static class SimGameState_AddMechPart_Patch {
-
-        static bool Prefix(SimGameState __instance) {
-            return false;
-        }
-
-        static void Postfix(SimGameState __instance, string id) {
-            try {
-
+    public static class SimGameState_AddMechPart_Patch
+    {
+        private static bool Prefix(SimGameState __instance, string id)
+        {
+            try
+            {
                 __instance.AddItemStat(id, "MECHPART", false);
 
-                Settings settings = Helper.LoadSettings();
+                Settings settings = Helper.Settings;
                 Dictionary<MechDef, int> possibleMechs = new Dictionary<MechDef, int>();
+                MechDef currentVariant = __instance.DataManager.MechDefs.Get(id);
                 int itemCount = 0;
-                if (settings.AssembleVariants && !settings.VariantExceptions.Contains(id)) {
-                    foreach (KeyValuePair<string, MechDef> pair in __instance.DataManager.MechDefs) {
-                        if (pair.Value.Chassis.PrefabIdentifier.Equals(__instance.DataManager.MechDefs.Get(id).Chassis.PrefabIdentifier) && !settings.VariantExceptions.Contains(pair.Value.Description.Id) && pair.Value.Chassis.Tonnage.Equals(__instance.DataManager.MechDefs.Get(id).Chassis.Tonnage)) {
+                if (settings.AssembleVariants && !settings.VariantExceptions.Contains(id))
+                {
+                    foreach (KeyValuePair<string, MechDef> pair in __instance.DataManager.MechDefs)
+                    {
+                        if (pair.Value.Chassis.PrefabIdentifier.Equals(currentVariant.Chassis.PrefabIdentifier) &&
+                            !settings.VariantExceptions.Contains(pair.Value.Description.Id) &&
+                            pair.Value.Chassis.Tonnage.Equals(__instance.DataManager.MechDefs.Get(id).Chassis.Tonnage))
+                        {
                             int numberOfParts = __instance.GetItemCount(pair.Value.Description.Id, "MECHPART", SimGameState.ItemCountType.UNDAMAGED_ONLY);
                             if (numberOfParts > 0) {
                                 itemCount += numberOfParts;
@@ -36,14 +40,60 @@ namespace AdjustedMechAssembly {
                 else {
                     itemCount = __instance.GetItemCount(id, "MECHPART", SimGameState.ItemCountType.UNDAMAGED_ONLY);
                 }
-                int defaultMechPartMax = __instance.Constants.Story.DefaultMechPartMax;
+
+                int defaultMechPartMax = __instance.GetMechPartsRequired(currentVariant);
                 if (itemCount >= defaultMechPartMax) {
                     MechDef mechDef = null;
                     List<KeyValuePair<MechDef, int>> mechlist = possibleMechs.ToList();
                     mechlist = possibleMechs.OrderByDescending(o => o.Value).ToList();
                     if (settings.AssembleVariants && !settings.VariantExceptions.Contains(id)) {
                         if (settings.AssembleMostParts) {
-                            mechDef = mechlist[0].Key;
+                            // This is the list of mechs which have the most parts
+                            // (there could be more than one if the parts are equal)
+                            // Don't include the variant which we've just found a part for.
+                            List<MechDef> topMechList = new List<MechDef>();
+                            if (mechlist[0].Key.ChassisID != currentVariant.ChassisID)
+                            {
+                                topMechList.Add(mechlist[0].Key);
+                            }
+
+                            for (int mechlistI = 1;
+                                mechlistI < mechlist.Count &&
+                                mechlist[mechlistI - 1].Value == mechlist[mechlistI].Value;
+                                ++mechlistI)
+                            {
+                                MechDef mechToAdd = mechlist[mechlistI].Key;
+                                if (mechToAdd.ChassisID != currentVariant.ChassisID)
+                                {
+                                    topMechList.Add(mechlist[mechlistI].Key);
+                                }
+                            }
+
+                            // Now if the most parts list is empty, choose the current variant.
+                            // If it has one element, choose it
+                            // (we prefer the variant which we have previously had the parts for, all else being equal)
+                            // if there's more than one variant, choose one from this list randomly.
+                            //
+                            // This approach gives the commander some control over what variant will be assembled.
+                            // For example, if the commander has 3 of one variant and 2 of another and the parts required is 6, 
+                            // they can be sure that the first variant will be constructed once they get another part
+                            // no matter what it is.
+                            // So commanders can sell parts if they choose to manipulate this.
+                            switch (topMechList.Count)
+                            {
+                                case 0:
+                                    mechDef = currentVariant;
+                                    break;
+                                case 1:
+                                    mechDef = topMechList[0];
+                                    break;
+                                default:
+                                    Random rand = new Random();
+                                    int roll = (int) rand.NextDouble() * topMechList.Count;
+                                    mechDef = topMechList[Math.Min(roll, topMechList.Count - 1)];
+                                    break;
+                            }
+
                         }
                         else {
                             Random rand = new Random();
@@ -51,7 +101,7 @@ namespace AdjustedMechAssembly {
                             double roll = rand.NextDouble();
                             double currentTotal = 0;
                             foreach (KeyValuePair<MechDef, int> mech in mechlist) {
-                                currentTotal += (double)mech.Value / (double)defaultMechPartMax;
+                                currentTotal += (double) mech.Value / (double) defaultMechPartMax;
                                 if (roll <= currentTotal) {
                                     mechDef = mech.Key;
                                     break;
@@ -150,8 +200,31 @@ namespace AdjustedMechAssembly {
                     interrupt.DisplayIfAvailable();
                     __instance.MessageCenter.PublishMessage(new SimGameMechAddedMessage(mechDef, defaultMechPartMax, true));
                 }
+
+                return false;
             }
             catch (Exception e) {
+                Logger.LogError(e);
+                return true;
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(SimGameState), "GetAllInventoryMechParts")]
+    public static class SimGameState_GetAllInventoryMechParts_Patch
+    {
+        public static void Postfix(SimGameState __instance, List<ChassisDef> __result)
+        {
+            try
+            {
+                foreach (ChassisDef chassis in __result)
+                {
+                    int partsRequired = __instance.GetMechPartsRequired(chassis);
+                    chassis.MechPartMax = partsRequired;
+                }
+            }
+            catch (Exception e)
+            {
                 Logger.LogError(e);
             }
         }
