@@ -21,7 +21,11 @@ namespace AdjustedMechAssembly {
 
         public bool AssembleVariants = true;
         public bool AssembleMostParts = false;
+        public bool IgnoreUnequiped = false;
+        public bool ForceUnequiped = false;
+
         public List<string> VariantExceptions;
+        public List<string> TagExceptions;
 
         public bool UseWeightThresholds = false;
         public List<int> WeightThresholds = new List<int> { 0, 0, 40, 45, 50, 60, 65, 70, 80, 85, 95, 95 };

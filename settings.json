@@ -1,21 +1,28 @@
 {
-		"HeadRepaired" : false,
-        "LeftArmRepaired" : false,
-        "RightArmRepaired" : false,
-        "CentralTorsoRepaired" : false,
-        "LeftTorsoRepaired" : false,
-        "RightTorsoRepaired" : false,
-        "LeftLegRepaired" : false,
-        "RightLegRepaired" : false,
+  "HeadRepaired": false,
+  "LeftArmRepaired": false,
+  "RightArmRepaired": false,
+  "CentralTorsoRepaired": false,
+  "LeftTorsoRepaired": false,
+  "RightTorsoRepaired": false,
+  "LeftLegRepaired": false,
+  "RightLegRepaired": false,
 
-        "RepairMechLimbs" : true,
-        "RepairMechLimbsChance" : 0.65,
-        "RandomStructureOnRepairedLimbs" : true,
+  "RepairMechLimbs": true,
+  "RepairMechLimbsChance": 0.65,
+  "RandomStructureOnRepairedLimbs": true,
 
-        "RepairMechComponents" : true,
-        "RepairComponentsFunctionalThreshold" : 0.25,
-        "RepairComponentsNonFunctionalThreshold" : 0.5,
+  "RepairMechComponents": true,
+  "RepairComponentsFunctionalThreshold": 0.25,
+  "RepairComponentsNonFunctionalThreshold": 0.5,
 
-		"UseWeightThresholds" : false,
-		"PartsByWeight" : [0,0,40,45,50,60,65,70,80,95,95]
+  "AssembleVariants": true,
+  "AssembleMostParts": true,
+  "IgnoreUnequiped": false,
+  "ForceUnequiped": false,
+  "TagExceptions" : [
+	"BLACKLISTED"
+  ],
+  "VariantExceptions": [
+  ]
 }
