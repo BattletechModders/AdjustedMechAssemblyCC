@@ -2,6 +2,8 @@
 
 namespace AdjustedMechAssembly {
     public class Settings {
+        public bool Debug = false;
+
         public bool HeadRepaired = false;
         public bool LeftArmRepaired = false;
         public bool RightArmRepaired = false;
