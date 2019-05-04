@@ -8,12 +8,9 @@ namespace AdjustedMechAssembly {
     public static class Helper
     {
         private static Settings _settings;
-        public static Settings Settings
-        {
-            get
-            {
-                try
-                {
+        public static Settings Settings {
+            get {
+                try {
                     if (_settings == null)
                     {
                         using (StreamReader r = new StreamReader($"{AdjustedMechAssembly.ModDirectory}/settings.json"))
@@ -23,10 +20,8 @@ namespace AdjustedMechAssembly {
                         }
                     }
                     return _settings;
-                }
-                catch (Exception ex)
-                {
-                    Logger.LogError(ex);
+                } catch (Exception ex) {
+                    AdjustedMechAssembly.Logger.LogError(ex);
                     return null;
                 }
             }
